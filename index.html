@@ -7,15 +7,12 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="index-page">
-    <!-- Navigation Bar -->
     <nav class="navbar">
         <div class="nav-container">
-            <!-- Team Logo -->
             <div class="logo">
-    <img src="images/logo.JPG" alt="AutoRent Logo" class="logo-image">
-    <span class="logo-text">AutoRent</span>
-            </div>            
-            <!-- Navigation Links -->
+                <img src="images/logo.JPG" alt="AutoRent Logo" class="logo-image">
+                <span class="logo-text">AutoRent</span>
+            </div>
             <ul class="nav-links">
                 <li><a href="index.html" class="active">Home</a></li>
                 <li><a href="cars.html">Available Cars</a></li>
@@ -24,13 +21,10 @@
         </div>
     </nav>
 
-    <!-- Hero Section -->
     <section class="hero">
         <div class="hero-content">
             <h1>Find Your Perfect Ride</h1>
             <p>Rent premium cars at affordable prices with AutoRent</p>
-            
-            <!-- Hero Button - Create New Car Rental -->
             <div class="hero-buttons">
                 <a href="add-car.html" class="btn btn-primary">Add New Car to Fleet</a>
                 <a href="cars.html" class="btn btn-secondary">Browse Available Cars</a>
@@ -38,28 +32,11 @@
         </div>
     </section>
 
-    <!-- Featured Cars Section -->
     <section class="featured-cars">
         <div class="container">
             <h2>Currently Available Cars</h2>
-            
-            <!-- Cars Table -->
-            <div class="cars-table">
-                <table id="carsTable">
-                    <thead>
-                        <tr>
-                            <th>Car Model</th>
-                            <th>Type</th>
-                            <th>Year</th>
-                            <th>Daily Rate ($)</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Car data will be populated by JavaScript -->
-                    </tbody>
-                </table>
+            <div id="carsGrid" class="cars-grid">
+                <!-- Cars will load here as cards -->
             </div>
         </div>
     </section>
@@ -67,4 +44,3 @@
     <script src="script.js"></script>
 </body>
 </html>
-

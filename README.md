@@ -110,15 +110,15 @@ Visit:
 
 ## Backend API Endpoints
 
-  Method   Endpoint              Description
-  -------- --------------------- --------------------
-  GET      /api/health           API status
-  GET      /api/cars             Get all cars
-  GET      /api/cars/available   Get available cars
-  GET      /api/cars/:id         Get car by ID
-  POST     /api/cars             Create a new car
-  PUT      /api/cars/:id         Update car
-  DELETE   /api/cars/:id         Delete car
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /api/health | API status |
+| GET | /api/cars | Get all cars |
+| GET | /api/cars/available | Get available cars |
+| GET | /api/cars/:id | Get car by ID |
+| POST | /api/cars | Create a new car |
+| PUT | /api/cars/:id | Update car |
+| DELETE | /api/cars/:id | Delete car |
 
 ------------------------------------------------------------------------
 
@@ -187,6 +187,7 @@ Visit:
 -   MDN Web Docs\
 -   W3Schools
 -   https://www.youtube.com/watch?v=vkCgvEVTIgw&t
+-   OpenAI.  ChatGPT https://chat.openai.com/
 
 ------------------------------------------------------------------------
 
@@ -194,4 +195,5 @@ Visit:
 
 Created for academic purposes under\
 **INFR3120 - Web & Scripting Programming (OntarioTech University)**.
+
 

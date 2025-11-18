@@ -9,16 +9,16 @@ const PORT = process.env.PORT || 10000;
 app.use(cors());
 app.use(express.json());
 
-// Serve static files from 'public' directory
-app.use(express.static('public'));
+// Serve ALL static files (CSS, JS, images)
+app.use(express.static(__dirname));
 
-// MongoDB connection
+// MongoDB connection and routes...
 mongoose.connect(process.env.MONGODB_URI, { 
   useNewUrlParser: true, 
   useUnifiedTopology: true 
 })
-.then(() => console.log(' MongoDB Connected Successfully'))
-.catch(err => console.error(' MongoDB Error:', err.message));
+.then(() => console.log('✅ MongoDB Connected Successfully'))
+.catch(err => console.error('❌ MongoDB Error:', err.message));
 
 const Car = mongoose.model('Car', new mongoose.Schema({
   model: { type: String, required: true },
@@ -29,7 +29,7 @@ const Car = mongoose.model('Car', new mongoose.Schema({
   description: { type: String, default: '' }
 }, { timestamps: true }));
 
-// Routes
+// API Routes
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'AutoRent API running', timestamp: new Date().toISOString() });
 });

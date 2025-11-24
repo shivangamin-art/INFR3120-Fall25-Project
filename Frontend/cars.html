@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Available Cars - AutoRent</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="cars-page">
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <img src="images/logo.jpg" alt="AutoRent Logo" class="logo-image">
+                <span class="logo-text">AutoRent</span>
+            </div>
+            <ul class="nav-links" id="navLinks">
+                <!-- Navigation will be dynamically updated -->
+            </ul>
+        </div>
+    </nav>
+
+    <section class="featured-cars">
+        <div class="container">
+            <h1>Our Car Fleet</h1>
+            <p>Browse all available cars in our rental fleet</p>
+            
+            <div class="cars-table">
+                <table id="carsTable">
+                    <thead>
+                        <tr>
+                            <th>Car Model</th>
+                            <th>Type</th>
+                            <th>Year</th>
+                            <th>Daily Rate ($)</th>
+                            <th>Status</th>
+                            <th>Description</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Cars will be loaded by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <script src="auth.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

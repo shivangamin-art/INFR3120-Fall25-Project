@@ -1,0 +1,46 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoRent - Premium Car Rental</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="index-page">
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+               <img src="images/logo.JPG" alt="AutoRent Logo" class="logo-image">
+                <span class="logo-text">AutoRent</span>
+            </div>
+            <ul class="nav-links" id="navLinks">
+                <!-- Navigation will be dynamically updated -->
+            </ul>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Find Your Perfect Ride</h1>
+            <p>Rent premium cars at affordable prices with AutoRent</p>
+            <div class="hero-buttons">
+                <a href="cars.html" class="btn btn-primary">Browse Available Cars</a>
+                <a href="add-car.html" class="btn btn-secondary">Add New Car</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="featured-cars">
+        <div class="container">
+            <h2>Currently Available Cars</h2>
+            <div id="carsGrid" class="cars-grid">
+                <!-- Cars will load here -->
+                <div class="loading">Loading cars...</div>
+            </div>
+        </div>
+    </section>
+
+    <script src="auth.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

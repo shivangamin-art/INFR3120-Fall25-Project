@@ -100,3 +100,101 @@ function updateNavigation() {
         });
     }
 }
+
+function isActivePage(page) {
+    return window.location.pathname.includes(page) || 
+           (page === 'index.html' && window.location.pathname === '/');
+}
+
+// Page Protection
+function protectPage() {
+    const currentPage = window.location.pathname;
+    const protectedPages = ['add-car.html', 'edit-car.html'];
+    
+    if (protectedPages.some(page => currentPage.includes(page))) {
+        if (!AuthService.isAuthenticated()) {
+            alert('Please login to access this page');
+            window.location.href = 'login.html';
+            return false;
+        }
+    }
+    return true;
+}
+
+// Initialize authentication
+document.addEventListener('DOMContentLoaded', function() {
+    updateNavigation();
+    
+    // Protect pages that require authentication
+    if (!protectPage()) {
+        return;
+    }
+
+    // Login form handler
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const submitBtn = loginForm.querySelector('button[type="submit"]');
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Logging in...';
+
+            try {
+                await AuthService.login(email, password);
+                alert('Login successful!');
+                window.location.href = 'index.html';
+            } catch (error) {
+                alert(error.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Login';
+            }
+        });
+    }
+
+    // Register form handler
+    const registerForm = document.getElementById('registerForm');
+    if (registerForm) {
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const submitBtn = registerForm.querySelector('button[type="submit"]');
+
+            if (password !== confirmPassword) {
+                alert('Passwords do not match');
+                return;
+            }
+
+            if (password.length < 6) {
+                alert('Password must be at least 6 characters long');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Registering...';
+
+            try {
+                await AuthService.register(email, password);
+                alert('Registration successful! Please login.');
+                window.location.href = 'login.html';
+            } catch (error) {
+                alert(error.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Register';
+            }
+        });
+    }
+});
+
+// Make functions available globally
+window.AuthService = AuthService;
+window.updateNavigation = updateNavigation;
+window.protectPage = protectPage;

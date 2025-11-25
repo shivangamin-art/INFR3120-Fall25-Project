@@ -204,9 +204,5 @@ app.get('*', (req, res) => {
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`\n🎉 AutoRent server running on port ${PORT}`);
   console.log(`📍 API health: http://localhost:${PORT}/api/health`);
-  console.log(`📍 Local: http://localhost:${PORT}`);
-    console.log(`📍 API: http://localhost:${PORT}/api`);
-    console.log(`📍 Health: http://localhost:${PORT}/api/health`);
-    console.log(`💾 Database: ${isMongoConnected() ? 'MongoDB ✅' : 'In-Memory Storage ⚠️'}`);
-    console.log('📁 Serving static files from current directory');
+  
 });

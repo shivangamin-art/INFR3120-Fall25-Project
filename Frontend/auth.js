@@ -1,5 +1,6 @@
-// Frontend/auth.js - Authentication system
+// Frontend/auth.js - COMPLETE FIXED VERSION
 const API_BASE_URL = 'https://autorent-k8dr.onrender.com';
+
 class AuthService {
     static isAuthenticated() {
         return localStorage.getItem('currentUser') !== null;

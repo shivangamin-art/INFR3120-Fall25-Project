@@ -31,18 +31,24 @@ if (!JWT_SECRET) {
   console.error('❌ JWT_SECRET is not set in environment variables');
   process.exit(1);
 }
-const { GOOGLE_CLIENT_ID } = process.env;
+if (!GOOGLE_CLIENT_ID) {
+  console.error('❌ GOOGLE_CLIENT_ID is not set in environment variables');
+  process.exit(1);
+}
+
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 // ===== Middleware =====
-app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:5500',
-    FRONTEND_URL
-  ],
-  credentials: false,
-}));
+app.use(
+  cors({
+    origin: [
+      'http://localhost:3000',
+      'http://localhost:5500',
+      FRONTEND_URL,
+    ].filter(Boolean),
+    credentials: false,
+  })
+);
 app.use(express.json());
 
 // Serve static frontend (optional if you’re serving from backend locally)
@@ -238,7 +244,9 @@ app.post('/api/auth/google', async (req, res) => {
 
 // Step 1: Redirect to GitHub
 app.get('/api/auth/github', (req, res) => {
-  const redirectUri = `${req.protocol}://${req.get('host')}/api/auth/github/callback`;
+  const redirectUri = `${req.protocol}://${req.get(
+    'host'
+  )}/api/auth/github/callback`;
 
   const params = new URLSearchParams({
     client_id: GITHUB_CLIENT_ID,
@@ -257,7 +265,9 @@ app.get('/api/auth/github/callback', async (req, res) => {
       return res.status(400).send('Missing code');
     }
 
-    const redirectUri = `${req.protocol}://${req.get('host')}/api/auth/github/callback`;
+    const redirectUri = `${req.protocol}://${req.get(
+      'host'
+    )}/api/auth/github/callback`;
 
     // Exchange code for access token
     const tokenRes = await fetch('https://github.com/login/oauth/access_token', {
@@ -301,7 +311,8 @@ app.get('/api/auth/github/callback', async (req, res) => {
         },
       });
       const emails = await emailRes.json();
-      const primary = emails.find(e => e.primary && e.verified) || emails[0];
+      const primary =
+        emails.find((e) => e.primary && e.verified) || emails[0];
       email = primary ? primary.email : null;
     }
 

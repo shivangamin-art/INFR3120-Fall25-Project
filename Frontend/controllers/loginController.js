@@ -56,8 +56,7 @@ app.controller('LoginController', function(
     }
 
     $window.google.accounts.id.initialize({
-      // ⬇️ IMPORTANT: put your real Google client ID here
-      client_id: 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com',
+      client_id: '904508671254-o5987fh7fffgih3b0mko3t8emump15n9.apps.googleusercontent.com',
       callback: handleGoogleCredential
     });
 

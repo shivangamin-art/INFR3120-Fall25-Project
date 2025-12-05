@@ -1,0 +1,55 @@
+﻿// Quick fix for remaining TypeScript errors
+// Add this to your cars.component.ts if methods are still missing
+
+// Add these methods to your CarsComponent class:
+
+getDataSourceText(): string {
+  return 'Local Storage & Mock Data';
+}
+
+testBackendConnection(): void {
+  this.loading = true;
+  this.carService.getAllCars().subscribe({
+    next: (cars: Car[]) => {
+      alert('✅ Backend connection successful!\\nLoaded ' + cars.length + ' cars.');
+      this.loading = false;
+    },
+    error: (error: any) => {
+      alert('⚠️ Backend connection failed. Using local data.\\nError: ' + error.message);
+      this.loading = false;
+    }
+  });
+}
+
+formatPrice(price: number): string {
+  return '$' + price.toLocaleString();
+}
+
+getStatusColor(status: string): string {
+  switch (status) {
+    case 'available': return '#4CAF50';
+    case 'rented': return '#FF9800';
+    case 'maintenance': return '#f44336';
+    default: return '#666';
+  }
+}
+
+getActionText(): string {
+  return this.carService.isAuthenticated() ? 'Edit' : 'View Details';
+}
+
+canEdit(): boolean {
+  return this.carService.isAdmin();
+}
+
+viewCarDetails(car: Car): void {
+  alert(
+    '🚗 Car Details:\\n\\n' +
+    'Model: ' + car.model + '\\n' +
+    'Type: ' + car.type + '\\n' +
+    'Year: ' + car.year + '\\n' +
+    'Price: ' + this.formatPrice(car.price) + '\\n' +
+    'Status: ' + car.status.toUpperCase() + '\\n' +
+    'Description: ' + (car.description || 'No description available')
+  );
+}

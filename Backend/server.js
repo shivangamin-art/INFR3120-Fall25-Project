@@ -8,29 +8,44 @@ const cors = require('cors');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // 🔑 Read env vars
-const { MONGODB_URI, JWT_SECRET } = process.env;
+const {
+  MONGODB_URI,
+  JWT_SECRET,
+  GOOGLE_CLIENT_ID,
+  GITHUB_CLIENT_ID,
+  GITHUB_CLIENT_SECRET,
+  FRONTEND_URL, // e.g. https://infr-3120-fall25-project-6brf.vercel.app
+} = process.env;
 
 if (!MONGODB_URI) {
   console.error('❌ MONGODB_URI is not set in environment variables');
   process.exit(1);
 }
-
 if (!JWT_SECRET) {
   console.error('❌ JWT_SECRET is not set in environment variables');
   process.exit(1);
 }
 
+const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
+
 // ===== Middleware =====
-// You can tighten this later with specific origins if you like
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:5500',
+    FRONTEND_URL
+  ],
+  credentials: false,
+}));
 app.use(express.json());
 
-// ⭐ Serve Frontend from correct location
+// Serve static frontend (optional if you’re serving from backend locally)
 app.use(express.static(path.join(__dirname, '../Frontend')));
 
 // ===== MongoDB Connection =====
@@ -41,7 +56,6 @@ mongoose
   .then(() => console.log('✅ MongoDB connected successfully'))
   .catch((err) => {
     console.error('❌ MongoDB connection failed:', err.message);
-    // optional: process.exit(1);
   });
 
 // ===== Mongoose Models =====
@@ -64,7 +78,7 @@ const carSchema = new mongoose.Schema(
 const userSchema = new mongoose.Schema(
   {
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+    password: { type: String, required: true }, // may be '' for social-only accounts
   },
   { timestamps: true }
 );
@@ -103,6 +117,8 @@ app.get('/api/health', async (req, res) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+// ---------- Email/Password Auth ----------
 
 // Register
 app.post('/api/auth/register', async (req, res) => {
@@ -175,6 +191,149 @@ app.post('/api/auth/login', async (req, res) => {
       .json({ message: 'Error logging in', error: err.message });
   }
 });
+
+// ---------- Google Auth ----------
+
+app.post('/api/auth/google', async (req, res) => {
+  try {
+    const { credential } = req.body;
+    if (!credential) {
+      return res.status(400).json({ message: 'Missing Google credential' });
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const email = payload.email;
+
+    let user = await User.findOne({ email });
+    if (!user) {
+      user = new User({ email, password: '' });
+      await user.save();
+    }
+
+    const token = jwt.sign(
+      { userId: user._id, email: user.email },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    return res.json({
+      message: 'Google login successful',
+      token,
+      user: { id: user._id, email: user.email },
+    });
+  } catch (err) {
+    console.error('❌ Google login error:', err);
+    res
+      .status(500)
+      .json({ message: 'Google login failed', error: err.message });
+  }
+});
+
+// ---------- GitHub Auth (OAuth redirect flow) ----------
+
+// Step 1: Redirect to GitHub
+app.get('/api/auth/github', (req, res) => {
+  const redirectUri = `${req.protocol}://${req.get('host')}/api/auth/github/callback`;
+
+  const params = new URLSearchParams({
+    client_id: GITHUB_CLIENT_ID,
+    redirect_uri: redirectUri,
+    scope: 'user:email',
+  });
+
+  res.redirect(`https://github.com/login/oauth/authorize?${params.toString()}`);
+});
+
+// Step 2: GitHub callback
+app.get('/api/auth/github/callback', async (req, res) => {
+  try {
+    const code = req.query.code;
+    if (!code) {
+      return res.status(400).send('Missing code');
+    }
+
+    const redirectUri = `${req.protocol}://${req.get('host')}/api/auth/github/callback`;
+
+    // Exchange code for access token
+    const tokenRes = await fetch('https://github.com/login/oauth/access_token', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        client_id: GITHUB_CLIENT_ID,
+        client_secret: GITHUB_CLIENT_SECRET,
+        code,
+        redirect_uri: redirectUri,
+      }),
+    });
+
+    const tokenData = await tokenRes.json();
+    const accessToken = tokenData.access_token;
+
+    if (!accessToken) {
+      console.error('GitHub token error:', tokenData);
+      return res.status(500).send('GitHub token exchange failed');
+    }
+
+    // Get user info
+    const userRes = await fetch('https://api.github.com/user', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: 'application/vnd.github+json',
+      },
+    });
+    const ghUser = await userRes.json();
+
+    // Get primary email
+    let email = ghUser.email;
+    if (!email) {
+      const emailRes = await fetch('https://api.github.com/user/emails', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: 'application/vnd.github+json',
+        },
+      });
+      const emails = await emailRes.json();
+      const primary = emails.find(e => e.primary && e.verified) || emails[0];
+      email = primary ? primary.email : null;
+    }
+
+    if (!email) {
+      return res.status(500).send('Could not retrieve email from GitHub');
+    }
+
+    let user = await User.findOne({ email });
+    if (!user) {
+      user = new User({ email, password: '' });
+      await user.save();
+    }
+
+    const token = jwt.sign(
+      { userId: user._id, email: user.email },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    // Redirect back to frontend with token + email in query
+    const redirectTo = `${FRONTEND_URL}/#!/login?githubToken=${encodeURIComponent(
+      token
+    )}&email=${encodeURIComponent(email)}`;
+
+    res.redirect(redirectTo);
+  } catch (err) {
+    console.error('❌ GitHub auth error:', err);
+    res.status(500).send('GitHub login failed');
+  }
+});
+
+// ---------- Cars API ----------
 
 // Get all cars
 app.get('/api/cars', async (req, res) => {
@@ -258,7 +417,7 @@ app.delete('/api/cars/:id', authMiddleware, async (req, res) => {
   }
 });
 
-// ===== Catch-all: serve Frontend SPA =====
+// ===== Catch-all: (optional) serve Frontend SPA in local dev =====
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../Frontend', 'index.html'));
 });

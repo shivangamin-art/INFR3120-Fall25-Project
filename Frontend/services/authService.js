@@ -1,72 +1,97 @@
 // Frontend/services/authService.js
 
-app.factory('AuthService', function($http, $rootScope) {
-  // Local dev backend URL - change to Render URL in production
-  var baseUrl = 'http://localhost:3000';
+app.factory('AuthService', function($http, $q) {
+  var API_BASE = (function() {
+    if (window.location.hostname === 'localhost') {
+      return ''; // same origin: http://localhost:3000
+    }
+    return 'https://backend-gamma-eight-27.vercel.app';
+  })();
 
-  var currentUser = null;
+  var TOKEN_KEY = 'autorent_token';
+  var USER_KEY = 'autorent_user';
 
-  function setCurrentUser(user) {
-    currentUser = user;
-    // Let the whole app know auth changed
-    $rootScope.$broadcast('authChanged', currentUser);
+  var currentUser = loadUserFromStorage();
+
+  function loadUserFromStorage() {
+    try {
+      var stored = localStorage.getItem(USER_KEY);
+      return stored ? JSON.parse(stored) : null;
+    } catch (e) {
+      return null;
+    }
   }
 
-  // Fetch logged-in user from backend
-  function fetchMe() {
-    return $http.get(baseUrl + '/api/auth/me', { withCredentials: true })
-      .then(function(res) {
-        var data = res.data;
+  function saveAuth(token, user) {
+    localStorage.setItem(TOKEN_KEY, token);
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+    currentUser = user;
+  }
 
-        // Try common shapes:
-        // 1) { user: {...} }
-        // 2) { _id, email, name, ... }
-        // 3) { authenticated: false } or {} => not logged in
-        var user = null;
-
-        if (data && data.user) {
-          user = data.user;
-        } else if (data && (data._id || data.email || data.name)) {
-          user = data;
-        }
-
-        if (data && data.authenticated === false) {
-          user = null;
-        }
-
-        setCurrentUser(user);
-        return currentUser;
-      })
-      .catch(function() {
-        setCurrentUser(null);
-        return null;
-      });
+  function clearAuth() {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    currentUser = null;
   }
 
   return {
     register: function(payload) {
-      return $http.post(baseUrl + '/api/auth/register', payload, { withCredentials: true });
+      return $http.post(API_BASE + '/api/auth/register', payload)
+        .then(function(res) {
+          var data = res.data;
+          if (data && data.token && data.user) {
+            saveAuth(data.token, data.user);
+          }
+          return data;
+        });
     },
 
     login: function(credentials) {
-      return $http.post(baseUrl + '/api/auth/login', credentials, { withCredentials: true })
-        .then(function() {
-          // After login, refresh user state
-          return fetchMe();
+      return $http.post(API_BASE + '/api/auth/login', credentials)
+        .then(function(res) {
+          var data = res.data;
+          if (data && data.token && data.user) {
+            saveAuth(data.token, data.user);
+          }
+          return data.user;
         });
+    },
+
+    // Google login: send credential to backend
+    googleLogin: function(credential) {
+      return $http.post(API_BASE + '/api/auth/google', { credential: credential })
+        .then(function(res) {
+          var data = res.data;
+          if (data && data.token && data.user) {
+            saveAuth(data.token, data.user);
+          }
+          return data.user;
+        });
+    },
+
+    // For GitHub callback redirect – token/email come from URL
+    acceptExternalLogin: function(token, email) {
+      if (token && email) {
+        saveAuth(token, { email: email });
+      }
+      return $q.resolve(currentUser);
     },
 
     logout: function() {
-      return $http.post(baseUrl + '/api/auth/logout', {}, { withCredentials: true })
-        .then(function() {
-          setCurrentUser(null);
-        });
+      clearAuth();
+      return $q.resolve();
     },
 
-    me: fetchMe,
+    me: function() {
+      return $q.resolve(currentUser);
+    },
 
     getCurrentUser: function() {
       return currentUser;
+    },
+
+    getToken: function() {
+      return localStorage.getItem(TOKEN_KEY);
     }
   };
 });

@@ -61,6 +61,7 @@ on Render.
 ------------------------------------------------------------------------
 
 ## Project Structure
+<<<<<<< HEAD
 
     /
     ├── index.html
@@ -74,6 +75,26 @@ on Render.
     ├── images/
     └── README.md
 
+=======
+`INFR3120-Fall25-Project-main/
+├── Backend/
+│   └── server.js          # Main server file
+├── Frontend/
+│   ├── index.html               # Homepage
+│   ├── cars.html                # Cars management page
+│   ├── add-car.html             # Add car form
+│   ├── edit-car.html            # Edit car form
+│   ├── login.html               # User login
+│   ├── register.html            # User registration
+│   ├── style.css                # Main stylesheet
+│   ├── script.js                # Frontend JavaScript
+│   ├── auth.js                  # Authentication logic
+│   └── images/
+│       └── logo.jpg             # Application logo
+├── package.json                 # Project dependencies
+└── README.md                    # Project documentation
+`
+>>>>>>> parent of 674ebb0 (Update README.md)
 ------------------------------------------------------------------------
 
 ## Getting Started (Local Development)
@@ -195,5 +216,4 @@ Visit:
 
 Created for academic purposes under\
 **INFR3120 - Web & Scripting Programming (OntarioTech University)**.
-
 

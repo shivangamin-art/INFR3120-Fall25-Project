@@ -1,5 +1,3 @@
-// Frontend/app.js
-
 var app = angular.module('autorentApp', ['ngRoute']);
 
 app.config(function($routeProvider) {
@@ -27,6 +25,14 @@ app.config(function($routeProvider) {
     .when('/cars/:id/edit', {
       templateUrl: 'views/car-form.html',
       controller: 'CarFormController'
+    })
+    .when('/forgot-password', {
+      templateUrl: 'views/forgot-password.html',
+      controller: 'ForgotPasswordController'
+    })
+    .when('/reset-password/:token', {
+      templateUrl: 'views/reset-password.html',
+      controller: 'ResetPasswordController'
     })
     .otherwise({ redirectTo: '/' });
 });

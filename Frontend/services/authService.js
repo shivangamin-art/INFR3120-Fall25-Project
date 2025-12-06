@@ -1,85 +1,72 @@
 // Frontend/services/authService.js
 
-app.factory('AuthService', function($http, $q) {
-  // Backend API base URL
-  var API_BASE = (function() {
-    if (window.location.hostname === 'localhost') {
-      // Local dev: backend serves frontend on same origin
-      // e.g. http://localhost:3000/
-      return '';
-    }
-    // Deployed frontend on Vercel -> call deployed backend on Vercel
-    return 'https://backend-gamma-eight-27.vercel.app';
-  })();
+app.factory('AuthService', function($http, $rootScope) {
+  // Local dev backend URL - change to Render URL in production
+  var baseUrl = 'http://localhost:3000';
 
-  var TOKEN_KEY = 'autorent_token';
-  var USER_KEY = 'autorent_user';
+  var currentUser = null;
 
-  var currentUser = loadUserFromStorage();
-
-  function loadUserFromStorage() {
-    try {
-      var stored = localStorage.getItem(USER_KEY);
-      return stored ? JSON.parse(stored) : null;
-    } catch (e) {
-      return null;
-    }
-  }
-
-  function saveAuth(token, user) {
-    localStorage.setItem(TOKEN_KEY, token);
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
+  function setCurrentUser(user) {
     currentUser = user;
+    // Let the whole app know auth changed
+    $rootScope.$broadcast('authChanged', currentUser);
   }
 
-  function clearAuth() {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
-    currentUser = null;
+  // Fetch logged-in user from backend
+  function fetchMe() {
+    return $http.get(baseUrl + '/api/auth/me', { withCredentials: true })
+      .then(function(res) {
+        var data = res.data;
+
+        // Try common shapes:
+        // 1) { user: {...} }
+        // 2) { _id, email, name, ... }
+        // 3) { authenticated: false } or {} => not logged in
+        var user = null;
+
+        if (data && data.user) {
+          user = data.user;
+        } else if (data && (data._id || data.email || data.name)) {
+          user = data;
+        }
+
+        if (data && data.authenticated === false) {
+          user = null;
+        }
+
+        setCurrentUser(user);
+        return currentUser;
+      })
+      .catch(function() {
+        setCurrentUser(null);
+        return null;
+      });
   }
 
   return {
-    // Register user and store token
     register: function(payload) {
-      return $http.post(API_BASE + '/api/auth/register', payload)
-        .then(function(res) {
-          var data = res.data;
-          if (data && data.token && data.user) {
-            saveAuth(data.token, data.user);
-          }
-          return data;
-        });
+      return $http.post(baseUrl + '/api/auth/register', payload, { withCredentials: true });
     },
 
-    // Login user and store token
     login: function(credentials) {
-      return $http.post(API_BASE + '/api/auth/login', credentials)
-        .then(function(res) {
-          var data = res.data;
-          if (data && data.token && data.user) {
-            saveAuth(data.token, data.user);
-          }
-          return data.user;
+      return $http.post(baseUrl + '/api/auth/login', credentials, { withCredentials: true })
+        .then(function() {
+          // After login, refresh user state
+          return fetchMe();
         });
     },
 
-    // Logout is just clearing local storage for JWT-based auth
     logout: function() {
-      clearAuth();
-      return $q.resolve();
+      return $http.post(baseUrl + '/api/auth/logout', {}, { withCredentials: true })
+        .then(function() {
+          setCurrentUser(null);
+        });
     },
 
-    // For Navbar and others: returns current user from memory
-    me: function() {
-      return $q.resolve(currentUser);
-    },
+    me: fetchMe,
 
     getCurrentUser: function() {
       return currentUser;
-    },
-
-    getToken: function() {
-      return localStorage.getItem(TOKEN_KEY);
     }
   };
 });

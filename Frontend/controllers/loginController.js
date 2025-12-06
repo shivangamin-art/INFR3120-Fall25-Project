@@ -8,8 +8,12 @@ app.controller('LoginController', function($scope, $location, AuthService) {
     $scope.error = '';
 
     AuthService.login($scope.formData)
-      .then(function() {
-        // Redirect to cars page after successful login
+      .then(function(user) {
+        if (!user) {
+          $scope.error = 'Login failed. Please check your email and password.';
+          return;
+        }
+        // authChanged event already fired; just navigate
         $location.path('/cars');
       })
       .catch(function(err) {

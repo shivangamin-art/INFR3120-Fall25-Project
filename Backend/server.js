@@ -10,9 +10,7 @@ const jwt = require('jsonwebtoken');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ===== Environment Variables =====
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://autorent-user:Autorent2025@cluster0.avlirvg.mongodb.net/autorent?retryWrites=true&w=majority';
-const JWT_SECRET = process.env.JWT_SECRET || 'autorent-secret-key-2025';
+
 
 // ===== Middleware =====
 app.use(cors());
